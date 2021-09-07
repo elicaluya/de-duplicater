@@ -9,17 +9,17 @@ public class Record {
 	private String firstName;
 	private String lastName;
 	private String address;
-	private LocalDateTime time;
+	private LocalDateTime dateTime;
 	
 	
-	public Record(String id, String email, String firstName, String lastName, String address, String time) {
+	public Record(String id, String email, String firstName, String lastName, String address, String dateTime) {
 		this.id = id;
 		this.email = email;
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.address = address;
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-		this.time = LocalDateTime.parse(time, formatter);
+		this.dateTime = LocalDateTime.parse(dateTime, formatter);
 	}
 	
 	
@@ -55,12 +55,12 @@ public class Record {
 		this.address = address;
 	}
 
-	public LocalDateTime getTime() {
-		return this.time;
+	public LocalDateTime getDateTime() {
+		return this.dateTime;
 	}
 
-	public void setTime(LocalDateTime time) {
-		this.time = time;
+	public void setDateTime(LocalDateTime time) {
+		this.dateTime = time;
 	}
 
 	public String getId() {

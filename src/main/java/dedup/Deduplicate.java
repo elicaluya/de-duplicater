@@ -12,13 +12,16 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 public class Deduplicate {
+	// File path for json files
 	final private static String filePath = "./src/main/resources/";
+	// Name of the JSON array in the input file to read from
 	final private static String jsonArrayName = "leads";
 	
 	
+	// Method to write the deduplicated list to an output file
 	public static void writeToFile(ArrayList<Record> recordList, String fileName) {
 		FileWriter outputFile = null;
-		JSONArray leads = new JSONArray();
+		JSONArray jsonArray = new JSONArray();
 		
 		for (Record record : recordList) {
 			JSONObject recordObject = new JSONObject();
@@ -27,13 +30,14 @@ public class Deduplicate {
 			recordObject.put("firstName", record.getFirstName());
 			recordObject.put("lastName", record.getLastName());
 			recordObject.put("address", record.getAddress());
-			recordObject.put("entryDate", record.getTime().toString());
-			leads.add(recordObject);
+			recordObject.put("entryDate", record.getDateTime().toString());
+			jsonArray.add(recordObject);
 		}
 		
 		JSONObject leadsObject = new JSONObject();
-		leadsObject.put("leads", leads);
+		leadsObject.put(jsonArrayName, jsonArray);
 		
+		// Write the deduplicated JSON Object to an output file
 		try {
 			outputFile = new FileWriter(filePath + fileName.substring(0, fileName.length()-5) + "Output.json");
 			outputFile.write(leadsObject.toJSONString());
@@ -52,7 +56,18 @@ public class Deduplicate {
 		}
 	}
 	
+	// Method for only printing changes between two records when a Record needs to be replaced
+	public static void printRecordFieldChange(Record r1, Record r2) {
+		if (!r1.getId().equals(r2.getId())) System.out.println("- ID --> From: " + r1.getId() + " To: " + r2.getId());
+		if (!r1.getEmail().equals(r2.getEmail())) System.out.println("- Email --> From: " + r1.getEmail() + " To: " + r2.getEmail());
+		if (!r1.getFirstName().equals(r2.getFirstName())) System.out.println("- First Name --> From: " + r1.getFirstName() + " To: " + r2.getFirstName());
+		if (!r1.getLastName().equals(r2.getLastName())) System.out.println("- Last Name --> From: " + r1.getLastName() + " To: " + r2.getLastName());
+		if (!r1.getAddress().equals(r2.getAddress())) System.out.println("- Address --> From: " + r1.getAddress() + " To: " + r2.getAddress());
+		if (!r1.getDateTime().equals(r2.getDateTime())) System.out.println("- Entry Date --> From: " + r1.getDateTime() + " To: " + r2.getDateTime());
+	}
 	
+	
+	// Deduplication method where filename is read in, turned into JSONObject then deduplication is stored in hashmaps.
 	public static void dedup(String fileName) {
 		HashMap<String, Record> ids = new HashMap<String, Record>();
 		HashMap<String, Record> emails = new HashMap<String, Record>();
@@ -66,23 +81,40 @@ public class Deduplicate {
 			
 			Iterator<JSONObject> iter = jsonArray.iterator();
 			
+			System.out.println("---------- Searching for duplicate IDs ----------");
 			while (iter.hasNext()) {
 				JSONObject entry = iter.next();
-				Record record = new Record((String) entry.get("_id"), (String) entry.get("email"), (String) entry.get("firstName"), 
-						(String) entry.get("lastName"), (String) entry.get("address"), (String) entry.get("entryDate"));
+				Record record = new Record(
+						(String) entry.get("_id"), 
+						(String) entry.get("email"), 
+						(String) entry.get("firstName"), 
+						(String) entry.get("lastName"), 
+						(String) entry.get("address"), 
+						(String) entry.get("entryDate"));
 				
-				if (!ids.containsKey(record.getId()) || 
-						ids.get(record.getId()).getTime().isBefore(record.getTime()) ||
-						ids.get(record.getId()).getTime().isEqual(record.getTime())) {
+				if (!ids.containsKey(record.getId())) {
+					ids.put(record.getId(), record);
+				}
+				else if (ids.get(record.getId()).getDateTime().isBefore(record.getDateTime()) ||
+						ids.get(record.getId()).getDateTime().isEqual(record.getDateTime())) {
+					System.out.println("FOUND DUPLICATE ID with later Date: " + record.getId());
+					System.out.println("Replacing the following fields:");
+					printRecordFieldChange(ids.get(record.getId()), record);
 					ids.put(record.getId(), record);
 				}
 			}
-			
-			for (Record r : ids.values()) {
-				if (!emails.containsKey(r.getEmail()) || 
-						emails.get(r.getEmail()).getTime().isBefore(r.getTime()) || 
-						emails.get(r.getEmail()).getTime().isEqual(r.getTime())) {
-					emails.put(r.getEmail(), r);
+
+			System.out.println("---------- Searching for duplicate Emails ----------");
+			for (Record record : ids.values()) {
+				if (!emails.containsKey(record.getEmail())){
+					emails.put(record.getEmail(), record);
+				}
+				else if (emails.get(record.getEmail()).getDateTime().isBefore(record.getDateTime()) || 
+						emails.get(record.getEmail()).getDateTime().isEqual(record.getDateTime())) {
+					System.out.println("FOUND DUPLICATE EMAIL with later Date: " + record.getEmail());
+					System.out.println("Replacing the following fields:");
+					printRecordFieldChange(emails.get(record.getEmail()), record);
+					emails.put(record.getEmail(), record);
 				}
 			}
 			
