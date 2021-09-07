@@ -2,7 +2,6 @@ package dedup;
 
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -127,6 +126,10 @@ public class Deduplicate {
 	
 	
 	public static void main(String[] args) {
+		if (args.length == 0) {
+			System.out.println("Missing File name in Arguments. Closing Program...");
+			System.exit(1);
+		}
 		String fileName = args[0];
 		dedup(fileName);
 	}

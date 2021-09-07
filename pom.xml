@@ -3,11 +3,31 @@
   <groupId>de-duplicater</groupId>
   <artifactId>de-duplicater</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <build>
+  	<plugins>
+  		<plugin>
+  			<groupId>org.codehaus.mojo</groupId>
+          	<artifactId>exec-maven-plugin</artifactId>
+          	<version>1.6.0</version>
+          	<executions>
+          		<execution>
+          			<goals>
+          				<goal>java</goal>
+          			</goals>
+          		</execution>
+          	</executions>
+          	<configuration>
+          		<mainClass>dedup.Deduplicate</mainClass>
+          	</configuration>
+  		</plugin>
+  	</plugins>
+  </build>
   <dependencies>
   	<dependency>
   		<groupId>com.googlecode.json-simple</groupId>
   		<artifactId>json-simple</artifactId>
   		<version>1.1.1</version>
+  		<scope>compile</scope>
   	</dependency>
   </dependencies>
 </project>
