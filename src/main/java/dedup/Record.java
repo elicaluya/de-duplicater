@@ -70,4 +70,13 @@ public class Record {
 	public void setId(String id) {
 		this.id = id;
 	}
+	
+	public void printRecordFieldChange(Record r2) {
+		if (!this.getId().equals(r2.getId())) System.out.println("- ID --> From: " + this.getId() + " To: " + r2.getId());
+		if (!this.getEmail().equals(r2.getEmail())) System.out.println("- Email --> From: " + this.getEmail() + " To: " + r2.getEmail());
+		if (!this.getFirstName().equals(r2.getFirstName())) System.out.println("- First Name --> From: " + this.getFirstName() + " To: " + r2.getFirstName());
+		if (!this.getLastName().equals(r2.getLastName())) System.out.println("- Last Name --> From: " + this.getLastName() + " To: " + r2.getLastName());
+		if (!this.getAddress().equals(r2.getAddress())) System.out.println("- Address --> From: " + this.getAddress() + " To: " + r2.getAddress());
+		if (!this.getDateTime().equals(r2.getDateTime())) System.out.println("- Entry Date --> From: " + this.getDateTime() + " To: " + r2.getDateTime());
+	}
 }

@@ -17,7 +17,7 @@
           		</execution>
           	</executions>
           	<configuration>
-          		<mainClass>dedup.Deduplicate</mainClass>
+          		<mainClass>dedup.Main</mainClass>
           	</configuration>
   		</plugin>
   	</plugins>

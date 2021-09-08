@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -12,15 +13,21 @@ import org.json.simple.parser.JSONParser;
 
 public class Deduplicate {
 	// File path for json files
-	final private static String filePath = "./src/main/resources/";
+	final private static String inputFilePath = "./src/main/resources/input/";
+	final private static String outputFilePath = "./src/main/resources/output/";
+	final private static String testInputFilePath = "./src/test/resources/input/";
+	final private static String testOutputFilePath = "./src/test/resources/output/";
 	// Name of the JSON array in the input file to read from
 	final private static String jsonArrayName = "leads";
 	
 	
+	
 	// Method to write the deduplicated list to an output file
-	public static void writeToFile(ArrayList<Record> recordList, String fileName) {
+	public static JSONObject dedupOutput(String fileName) {
 		FileWriter outputFile = null;
 		JSONArray jsonArray = new JSONArray();
+		
+		List<Record> recordList = dedup(fileName);
 		
 		for (Record record : recordList) {
 			JSONObject recordObject = new JSONObject();
@@ -33,13 +40,15 @@ public class Deduplicate {
 			jsonArray.add(recordObject);
 		}
 		
-		JSONObject leadsObject = new JSONObject();
-		leadsObject.put(jsonArrayName, jsonArray);
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put(jsonArrayName, jsonArray);
 		
 		// Write the deduplicated JSON Object to an output file
 		try {
-			outputFile = new FileWriter(filePath + fileName.substring(0, fileName.length()-5) + "Output.json");
-			outputFile.write(leadsObject.toJSONString());
+			outputFile = (fileName.indexOf("test") == 0) ? 
+					new FileWriter(testOutputFilePath + fileName.substring(0, fileName.length()-5) + "Output.json") :
+				new FileWriter(outputFilePath + fileName.substring(0, fileName.length()-5) + "Output.json");
+			outputFile.write(jsonObject.toJSONString());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -53,26 +62,20 @@ public class Deduplicate {
 				e.printStackTrace();
 			}
 		}
+		return jsonObject;
 	}
 	
-	// Method for only printing changes between two records when a Record needs to be replaced
-	public static void printRecordFieldChange(Record r1, Record r2) {
-		if (!r1.getId().equals(r2.getId())) System.out.println("- ID --> From: " + r1.getId() + " To: " + r2.getId());
-		if (!r1.getEmail().equals(r2.getEmail())) System.out.println("- Email --> From: " + r1.getEmail() + " To: " + r2.getEmail());
-		if (!r1.getFirstName().equals(r2.getFirstName())) System.out.println("- First Name --> From: " + r1.getFirstName() + " To: " + r2.getFirstName());
-		if (!r1.getLastName().equals(r2.getLastName())) System.out.println("- Last Name --> From: " + r1.getLastName() + " To: " + r2.getLastName());
-		if (!r1.getAddress().equals(r2.getAddress())) System.out.println("- Address --> From: " + r1.getAddress() + " To: " + r2.getAddress());
-		if (!r1.getDateTime().equals(r2.getDateTime())) System.out.println("- Entry Date --> From: " + r1.getDateTime() + " To: " + r2.getDateTime());
-	}
 	
 	
 	// Deduplication method where filename is read in, turned into JSONObject then deduplication is stored in hashmaps.
-	public static void dedup(String fileName) {
+	public static List<Record> dedup(String fileName) {
 		HashMap<String, Record> ids = new HashMap<String, Record>();
 		HashMap<String, Record> emails = new HashMap<String, Record>();
 		JSONParser parser = new JSONParser();
 		try {
-			Object obj = parser.parse(new FileReader(filePath + fileName));
+			Object obj = (fileName.indexOf("test") == 0) ? 
+					parser.parse(new FileReader(testInputFilePath + fileName)) 
+					: parser.parse(new FileReader(inputFilePath + fileName));
 			
 			JSONObject jsonObject = (JSONObject) obj;
 			
@@ -96,9 +99,9 @@ public class Deduplicate {
 				}
 				else if (ids.get(record.getId()).getDateTime().isBefore(record.getDateTime()) ||
 						ids.get(record.getId()).getDateTime().isEqual(record.getDateTime())) {
-					System.out.println("FOUND DUPLICATE ID with later Date: " + record.getId());
+					System.out.println("FOUND DUPLICATE ID with later or same Date: " + record.getId());
 					System.out.println("Replacing the following fields:");
-					printRecordFieldChange(ids.get(record.getId()), record);
+					ids.get(record.getId()).printRecordFieldChange(record);
 					ids.put(record.getId(), record);
 				}
 			}
@@ -110,27 +113,17 @@ public class Deduplicate {
 				}
 				else if (emails.get(record.getEmail()).getDateTime().isBefore(record.getDateTime()) || 
 						emails.get(record.getEmail()).getDateTime().isEqual(record.getDateTime())) {
-					System.out.println("FOUND DUPLICATE EMAIL with later Date: " + record.getEmail());
+					System.out.println("FOUND DUPLICATE EMAIL with later or same Date: " + record.getEmail());
 					System.out.println("Replacing the following fields:");
-					printRecordFieldChange(emails.get(record.getEmail()), record);
+					emails.get(record.getEmail()).printRecordFieldChange(record);
 					emails.put(record.getEmail(), record);
 				}
 			}
-			
-			writeToFile(new ArrayList<Record>(emails.values()), fileName);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	
-	public static void main(String[] args) {
-		if (args.length == 0) {
-			System.out.println("Missing File name in Arguments. Closing Program...");
-			System.exit(1);
-		}
-		String fileName = args[0];
-		dedup(fileName);
+		
+		return new ArrayList<Record>(emails.values());
 	}
 }
